@@ -337,9 +337,8 @@ class SSATransform {
       result
     }
     is Lambda -> {
-      val body = traverseExprBlock(expr.body, true)
       val result = newVar()
-      emitter.emit(LoadLambda(result, expr.args, body))
+      emitter.emit(LoadLambda(result, expr))
       result
     }
     is ListExpr -> {

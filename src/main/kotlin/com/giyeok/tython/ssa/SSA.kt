@@ -15,12 +15,11 @@ data class SSABlockValue(val block: SSABlock, val value: SSAVar)
 data class LoadConst(val dest: SSAVar, val value: Constant) : SSA()
 data class LoadConstBool(val dest: SSAVar, val value: Boolean) : SSA()
 
-// TODO lookup table은 어쩌지?
-// TODO default value들은?
+// lookup table은 어쩌지? -> SSA가 실행될 때 LoadName의 context만 바꿔주면 됨
+// default value들은? -> 마찬가지로 LoadName의 context만 잘 해주면 됨
 data class LoadFunctionDef(val dest: SSAVar, val functionDef: FunctionDef) : SSA()
 data class LoadClassDef(val dest: SSAVar, val classDef: ClassDef) : SSA()
-data class LoadLambda(val dest: SSAVar, val args: Arguments, val body: SSABlockValue) : SSA()
-// TODO generator같은 것들은?
+data class LoadLambda(val dest: SSAVar, val lambda: Lambda) : SSA()
 
 data class LoadName(val dest: SSAVar, val source: String) : SSA()
 data class StoreName(val dest: String, val source: SSAVar) : SSA()
@@ -76,7 +75,8 @@ data class FormatString(
   val format: SSAVar?
 ) : SSA()
 
-// TODO
+// generator도 LoadFunctionDef, LoadClassDef, LoadLamba에서와 마찬가지로 실제 실행할 때 LoadName의 context만 잘 바꿔주면 됨
+// ListComp, SetComp, DictComp는 CreateGenerator의 내용으로 들어갈 것을 그냥 현재 블록에 넣는 정도의 차이
 data class CreateGenerator(val dest: SSAVar) : SSA()
 
 data class ForLoop(
