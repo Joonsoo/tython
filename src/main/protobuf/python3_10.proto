@@ -1,0 +1,812 @@
+syntax = "proto3";
+
+package com.giyeok.tython.proto;
+
+option java_multiple_files = true;
+message AbstractMod {
+  oneof abstract_mod {
+    Module module = 1;
+    Interactive interactive = 2;
+    Expression expression = 3;
+    FunctionType function_type = 4;
+  }
+}
+message Module {
+  repeated AbstractStmt body = 1;
+  repeated AbstractTypeIgnore type_ignores = 2;
+}
+message Interactive {
+  repeated AbstractStmt body = 1;
+}
+message Expression {
+  AbstractExpr body = 1;
+}
+message FunctionType {
+  repeated AbstractExpr argtypes = 1;
+  AbstractExpr returns = 2;
+}
+
+message AbstractStmt {
+  oneof abstract_stmt {
+    FunctionDef function_def = 1;
+    AsyncFunctionDef async_function_def = 2;
+    ClassDef class_def = 3;
+    Return return = 4;
+    Delete delete = 5;
+    Assign assign = 6;
+    AugAssign aug_assign = 7;
+    AnnAssign ann_assign = 8;
+    For for = 9;
+    AsyncFor async_for = 10;
+    While while = 11;
+    If if = 12;
+    With with = 13;
+    AsyncWith async_with = 14;
+    Match match = 15;
+    Raise raise = 16;
+    Try try = 17;
+    Assert assert = 18;
+    Import import = 19;
+    ImportFrom import_from = 20;
+    Global global = 21;
+    Nonlocal nonlocal = 22;
+    Expr expr = 23;
+    Pass pass = 24;
+    Break break = 25;
+    Continue continue = 26;
+  }
+}
+message FunctionDef {
+  string name = 1;
+  Arguments args = 2;
+  repeated AbstractStmt body = 3;
+  repeated AbstractExpr decorator_list = 4;
+  optional AbstractExpr returns = 5;
+  optional string type_comment = 6;
+  int32 lineno = 7;
+  int32 col_offset = 8;
+  optional int32 end_lineno = 9;
+  optional int32 end_col_offset = 10;
+}
+message AsyncFunctionDef {
+  string name = 1;
+  Arguments args = 2;
+  repeated AbstractStmt body = 3;
+  repeated AbstractExpr decorator_list = 4;
+  optional AbstractExpr returns = 5;
+  optional string type_comment = 6;
+  int32 lineno = 7;
+  int32 col_offset = 8;
+  optional int32 end_lineno = 9;
+  optional int32 end_col_offset = 10;
+}
+message ClassDef {
+  string name = 1;
+  repeated AbstractExpr bases = 2;
+  repeated Keyword keywords = 3;
+  repeated AbstractStmt body = 4;
+  repeated AbstractExpr decorator_list = 5;
+  int32 lineno = 6;
+  int32 col_offset = 7;
+  optional int32 end_lineno = 8;
+  optional int32 end_col_offset = 9;
+}
+message Return {
+  optional AbstractExpr value = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message Delete {
+  repeated AbstractExpr targets = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message Assign {
+  repeated AbstractExpr targets = 1;
+  AbstractExpr value = 2;
+  optional string type_comment = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message AugAssign {
+  AbstractExpr target = 1;
+  AbstractOperator op = 2;
+  AbstractExpr value = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message AnnAssign {
+  AbstractExpr target = 1;
+  AbstractExpr annotation = 2;
+  optional AbstractExpr value = 3;
+  int32 simple = 4;
+  int32 lineno = 5;
+  int32 col_offset = 6;
+  optional int32 end_lineno = 7;
+  optional int32 end_col_offset = 8;
+}
+message For {
+  AbstractExpr target = 1;
+  AbstractExpr iter = 2;
+  repeated AbstractStmt body = 3;
+  repeated AbstractStmt orelse = 4;
+  optional string type_comment = 5;
+  int32 lineno = 6;
+  int32 col_offset = 7;
+  optional int32 end_lineno = 8;
+  optional int32 end_col_offset = 9;
+}
+message AsyncFor {
+  AbstractExpr target = 1;
+  AbstractExpr iter = 2;
+  repeated AbstractStmt body = 3;
+  repeated AbstractStmt orelse = 4;
+  optional string type_comment = 5;
+  int32 lineno = 6;
+  int32 col_offset = 7;
+  optional int32 end_lineno = 8;
+  optional int32 end_col_offset = 9;
+}
+message While {
+  AbstractExpr test = 1;
+  repeated AbstractStmt body = 2;
+  repeated AbstractStmt orelse = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message If {
+  AbstractExpr test = 1;
+  repeated AbstractStmt body = 2;
+  repeated AbstractStmt orelse = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message With {
+  repeated Withitem items = 1;
+  repeated AbstractStmt body = 2;
+  optional string type_comment = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message AsyncWith {
+  repeated Withitem items = 1;
+  repeated AbstractStmt body = 2;
+  optional string type_comment = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message Match {
+  AbstractExpr subject = 1;
+  repeated MatchCase cases = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message Raise {
+  optional AbstractExpr exc = 1;
+  optional AbstractExpr cause = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message Try {
+  repeated AbstractStmt body = 1;
+  repeated AbstractExcepthandler handlers = 2;
+  repeated AbstractStmt orelse = 3;
+  repeated AbstractStmt finalbody = 4;
+  int32 lineno = 5;
+  int32 col_offset = 6;
+  optional int32 end_lineno = 7;
+  optional int32 end_col_offset = 8;
+}
+message Assert {
+  AbstractExpr test = 1;
+  optional AbstractExpr msg = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message Import {
+  repeated Alias names = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message ImportFrom {
+  optional string module = 1;
+  repeated Alias names = 2;
+  optional int32 level = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message Global {
+  repeated string names = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message Nonlocal {
+  repeated string names = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message Expr {
+  AbstractExpr value = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message Pass {
+  int32 lineno = 1;
+  int32 col_offset = 2;
+  optional int32 end_lineno = 3;
+  optional int32 end_col_offset = 4;
+}
+message Break {
+  int32 lineno = 1;
+  int32 col_offset = 2;
+  optional int32 end_lineno = 3;
+  optional int32 end_col_offset = 4;
+}
+message Continue {
+  int32 lineno = 1;
+  int32 col_offset = 2;
+  optional int32 end_lineno = 3;
+  optional int32 end_col_offset = 4;
+}
+
+message AbstractExpr {
+  oneof abstract_expr {
+    BoolOp bool_op = 1;
+    NamedExpr named_expr = 2;
+    BinOp bin_op = 3;
+    UnaryOp unary_op = 4;
+    Lambda lambda = 5;
+    IfExp if_exp = 6;
+    Dict dict = 7;
+    SetExpr set_expr = 8;
+    ListComp list_comp = 9;
+    SetComp set_comp = 10;
+    DictComp dict_comp = 11;
+    GeneratorExp generator_exp = 12;
+    Await await = 13;
+    Yield yield = 14;
+    YieldFrom yield_from = 15;
+    Compare compare = 16;
+    Call call = 17;
+    FormattedValue formatted_value = 18;
+    JoinedStr joined_str = 19;
+    Constant constant = 20;
+    Attribute attribute = 21;
+    Subscript subscript = 22;
+    Starred starred = 23;
+    Name name = 24;
+    ListExpr list_expr = 25;
+    Tuple tuple = 26;
+    Slice slice = 27;
+  }
+}
+message BoolOp {
+  AbstractBoolop op = 1;
+  repeated AbstractExpr values = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message NamedExpr {
+  AbstractExpr target = 1;
+  AbstractExpr value = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message BinOp {
+  AbstractExpr left = 1;
+  AbstractOperator op = 2;
+  AbstractExpr right = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message UnaryOp {
+  AbstractUnaryop op = 1;
+  AbstractExpr operand = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message Lambda {
+  Arguments args = 1;
+  AbstractExpr body = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message IfExp {
+  AbstractExpr test = 1;
+  AbstractExpr body = 2;
+  AbstractExpr orelse = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message Dict {
+  repeated AbstractExpr keys = 1;
+  repeated AbstractExpr values = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message SetExpr {
+  repeated AbstractExpr elts = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message ListComp {
+  AbstractExpr elt = 1;
+  repeated Comprehension generators = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message SetComp {
+  AbstractExpr elt = 1;
+  repeated Comprehension generators = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message DictComp {
+  AbstractExpr key = 1;
+  AbstractExpr value = 2;
+  repeated Comprehension generators = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message GeneratorExp {
+  AbstractExpr elt = 1;
+  repeated Comprehension generators = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message Await {
+  AbstractExpr value = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message Yield {
+  optional AbstractExpr value = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message YieldFrom {
+  AbstractExpr value = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message Compare {
+  AbstractExpr left = 1;
+  repeated AbstractCmpop ops = 2;
+  repeated AbstractExpr comparators = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message Call {
+  AbstractExpr func = 1;
+  repeated AbstractExpr args = 2;
+  repeated Keyword keywords = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message FormattedValue {
+  AbstractExpr value = 1;
+  int32 conversion = 2;
+  optional AbstractExpr format_spec = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message JoinedStr {
+  repeated AbstractExpr values = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  optional int32 end_lineno = 4;
+  optional int32 end_col_offset = 5;
+}
+message Constant {
+  string value = 1;
+  optional string kind = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message Attribute {
+  AbstractExpr value = 1;
+  string attr = 2;
+  AbstractExprContext ctx = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message Subscript {
+  AbstractExpr value = 1;
+  AbstractExpr slice = 2;
+  AbstractExprContext ctx = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+message Starred {
+  AbstractExpr value = 1;
+  AbstractExprContext ctx = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message Name {
+  string id = 1;
+  AbstractExprContext ctx = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message ListExpr {
+  repeated AbstractExpr elts = 1;
+  AbstractExprContext ctx = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message Tuple {
+  repeated AbstractExpr elts = 1;
+  AbstractExprContext ctx = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+message Slice {
+  optional AbstractExpr lower = 1;
+  optional AbstractExpr upper = 2;
+  optional AbstractExpr step = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+
+message AbstractExprContext {
+  oneof abstract_expr_context {
+    Load load = 1;
+    Store store = 2;
+    Del del = 3;
+  }
+}
+message Load {
+}
+message Store {
+}
+message Del {
+}
+
+message AbstractBoolop {
+  oneof abstract_boolop {
+    And and = 1;
+    Or or = 2;
+  }
+}
+message And {
+}
+message Or {
+}
+
+message AbstractOperator {
+  oneof abstract_operator {
+    Add add = 1;
+    Sub sub = 2;
+    Mult mult = 3;
+    MatMult mat_mult = 4;
+    Div div = 5;
+    Mod mod = 6;
+    Pow pow = 7;
+    LShift l_shift = 8;
+    RShift r_shift = 9;
+    BitOr bit_or = 10;
+    BitXor bit_xor = 11;
+    BitAnd bit_and = 12;
+    FloorDiv floor_div = 13;
+  }
+}
+message Add {
+}
+message Sub {
+}
+message Mult {
+}
+message MatMult {
+}
+message Div {
+}
+message Mod {
+}
+message Pow {
+}
+message LShift {
+}
+message RShift {
+}
+message BitOr {
+}
+message BitXor {
+}
+message BitAnd {
+}
+message FloorDiv {
+}
+
+message AbstractUnaryop {
+  oneof abstract_unaryop {
+    Invert invert = 1;
+    Not not = 2;
+    UAdd u_add = 3;
+    USub u_sub = 4;
+  }
+}
+message Invert {
+}
+message Not {
+}
+message UAdd {
+}
+message USub {
+}
+
+message AbstractCmpop {
+  oneof abstract_cmpop {
+    Eq eq = 1;
+    NotEq not_eq = 2;
+    Lt lt = 3;
+    LtE lt_e = 4;
+    Gt gt = 5;
+    GtE gt_e = 6;
+    Is is = 7;
+    IsNot is_not = 8;
+    In in = 9;
+    NotIn not_in = 10;
+  }
+}
+message Eq {
+}
+message NotEq {
+}
+message Lt {
+}
+message LtE {
+}
+message Gt {
+}
+message GtE {
+}
+message Is {
+}
+message IsNot {
+}
+message In {
+}
+message NotIn {
+}
+
+message Comprehension {
+  AbstractExpr target = 1;
+  AbstractExpr iter = 2;
+  repeated AbstractExpr ifs = 3;
+  int32 is_async = 4;
+}
+
+message AbstractExcepthandler {
+  oneof abstract_excepthandler {
+    ExceptHandler except_handler = 1;
+  }
+}
+message ExceptHandler {
+  optional AbstractExpr type = 1;
+  optional string name = 2;
+  repeated AbstractStmt body = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+
+message Arguments {
+  repeated Arg posonlyargs = 1;
+  repeated Arg args = 2;
+  optional Arg vararg = 3;
+  repeated Arg kwonlyargs = 4;
+  repeated AbstractExpr kw_defaults = 5;
+  optional Arg kwarg = 6;
+  repeated AbstractExpr defaults = 7;
+}
+
+message Arg {
+  string arg = 1;
+  optional AbstractExpr annotation = 2;
+  optional string type_comment = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  optional int32 end_lineno = 6;
+  optional int32 end_col_offset = 7;
+}
+
+message Keyword {
+  optional string arg = 1;
+  AbstractExpr value = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+
+message Alias {
+  string name = 1;
+  optional string asname = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  optional int32 end_lineno = 5;
+  optional int32 end_col_offset = 6;
+}
+
+message Withitem {
+  AbstractExpr context_expr = 1;
+  optional AbstractExpr optional_vars = 2;
+}
+
+message MatchCase {
+  AbstractPattern pattern = 1;
+  optional AbstractExpr guard = 2;
+  repeated AbstractStmt body = 3;
+}
+
+message AbstractPattern {
+  oneof abstract_pattern {
+    MatchValue match_value = 1;
+    MatchSingleton match_singleton = 2;
+    MatchSequence match_sequence = 3;
+    MatchMapping match_mapping = 4;
+    MatchClass match_class = 5;
+    MatchStar match_star = 6;
+    MatchAs match_as = 7;
+    MatchOr match_or = 8;
+  }
+}
+message MatchValue {
+  AbstractExpr value = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  int32 end_lineno = 4;
+  int32 end_col_offset = 5;
+}
+message MatchSingleton {
+  string value = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  int32 end_lineno = 4;
+  int32 end_col_offset = 5;
+}
+message MatchSequence {
+  repeated AbstractPattern patterns = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  int32 end_lineno = 4;
+  int32 end_col_offset = 5;
+}
+message MatchMapping {
+  repeated AbstractExpr keys = 1;
+  repeated AbstractPattern patterns = 2;
+  optional string rest = 3;
+  int32 lineno = 4;
+  int32 col_offset = 5;
+  int32 end_lineno = 6;
+  int32 end_col_offset = 7;
+}
+message MatchClass {
+  AbstractExpr cls = 1;
+  repeated AbstractPattern patterns = 2;
+  repeated string kwd_attrs = 3;
+  repeated AbstractPattern kwd_patterns = 4;
+  int32 lineno = 5;
+  int32 col_offset = 6;
+  int32 end_lineno = 7;
+  int32 end_col_offset = 8;
+}
+message MatchStar {
+  optional string name = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  int32 end_lineno = 4;
+  int32 end_col_offset = 5;
+}
+message MatchAs {
+  optional AbstractPattern pattern = 1;
+  optional string name = 2;
+  int32 lineno = 3;
+  int32 col_offset = 4;
+  int32 end_lineno = 5;
+  int32 end_col_offset = 6;
+}
+message MatchOr {
+  repeated AbstractPattern patterns = 1;
+  int32 lineno = 2;
+  int32 col_offset = 3;
+  int32 end_lineno = 4;
+  int32 end_col_offset = 5;
+}
+
+message AbstractTypeIgnore {
+  oneof abstract_type_ignore {
+    TypeIgnore type_ignore = 1;
+  }
+}
+message TypeIgnore {
+  int32 lineno = 1;
+  string tag = 2;
+}
+
