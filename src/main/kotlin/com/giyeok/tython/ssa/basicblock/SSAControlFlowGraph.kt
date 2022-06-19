@@ -1,7 +1,6 @@
 package com.giyeok.tython.ssa.basicblock
 
 import com.giyeok.tython.ssa.SSA
-import com.giyeok.tython.ssa.SSAVar
 
 data class SSAControlFlowGraph(
   // nodes중에는 비어있는 노드가 있을 수도 있음
@@ -9,6 +8,8 @@ data class SSAControlFlowGraph(
   val edges: List<SSABasicBlockEdge>,
   val entryPoint: String,
   val exitPoint: String?,
+  // key -> value: key의 노드에서 익셉션이 생기면 value에 정의된 노드로(앞에서부터) 전달
+  val exceptionHandlers: Map<String, List<String>>,
 )
 
 data class SSABasicBlock(val ssas: List<SSA>)

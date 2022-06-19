@@ -2,7 +2,7 @@ package com.giyeok.tython.ssa.basicblock
 
 import com.giyeok.tython.ssa.*
 
-class SSAControlFlowGraphTransform {
+class SSAControlFlowGraphGen {
   private var idCounter = 0
   fun newId(): String {
     idCounter += 1
@@ -29,7 +29,8 @@ class SSAControlFlowGraphTransform {
 
   class GraphBuilder(
     val nodes: MutableMap<String, SSABasicBlock>,
-    val edges: MutableList<SSABasicBlockEdge>
+    val edges: MutableList<SSABasicBlockEdge>,
+    val exceptionHandlers: MutableMap<String, MutableList<String>>,
   ) {
     fun addNode(blockBuilder: BasicBlockBuilder) {
       nodes[blockBuilder.id] = SSABasicBlock(blockBuilder.ssas.toList())
@@ -46,13 +47,19 @@ class SSAControlFlowGraphTransform {
     }
 
     fun build(entryPoint: String, exitPoint: String?): SSAControlFlowGraph =
-      SSAControlFlowGraph(nodes.toMap(), edges.toList(), entryPoint, exitPoint)
+      SSAControlFlowGraph(
+        nodes.toMap(),
+        edges.toList(),
+        entryPoint,
+        exitPoint,
+        exceptionHandlers.toMap()
+      )
   }
 
   data class LoopContext(val jumpByContinue: String, val jumpByBreak: String)
 
   fun transform(ssas: List<SSA>, loopCtx: LoopContext?): SSAControlFlowGraph {
-    val builder = GraphBuilder(mutableMapOf(), mutableListOf())
+    val builder = GraphBuilder(mutableMapOf(), mutableListOf(), mutableMapOf())
     var currentBlock = newBlockBuilder()
     val entryPoint = currentBlock.id
     ssas.forEachIndexed { index, ssa ->
@@ -71,10 +78,10 @@ class SSAControlFlowGraphTransform {
         is CreateTuple,
         is CheckUnpackSize, // TODO CheckUnpackSize같은건 별도 분기라고 볼 순 없나..?
         is LoadAttribute,
-        is LoadClassDef,
+        is CreateClassDef,
         is LoadConst,
         is LoadConstBool,
-        is LoadFunctionDef,
+        is CreateFunctionDef,
         is LoadName,
         is LoadSubscript,
         is NextIter,
@@ -85,7 +92,13 @@ class SSAControlFlowGraphTransform {
         is Unpack,
         is UnpackRest,
         is JoinString,
-        is FormatString -> {
+        is FormatString,
+        is AddToDict,
+        is AddToList,
+        is AddToSet,
+        is CreateLambda,
+        is LoadLatestException,
+        is StoreImport -> {
           currentBlock.append(ssa)
         }
         is RaiseStmt, is ReturnStmt -> {
@@ -238,10 +251,44 @@ class SSAControlFlowGraphTransform {
             builder.addEdge(SSANormalFlowEdge(elseGraph.exitPoint, nextBlock.id))
           }
         }
+        is CompBlock -> {
+          val thisBlock = currentBlock
+          val nextBlock = newBlockBuilder()
+          currentBlock = nextBlock
+
+          val compGraph = transform(ssa.body.stmts, loopCtx).append(Jump(nextBlock.id))
+
+          builder.addNode(thisBlock)
+          builder.addGraph(compGraph)
+          builder.addEdge(SSANormalFlowEdge(thisBlock.id, compGraph.entryPoint))
+          if (compGraph.exitPoint != null) {
+            builder.addEdge(SSANormalFlowEdge(compGraph.exitPoint, nextBlock.id))
+          }
+          // TODO 뭐 더 할게 있나?
+        }
+        is YieldStmt -> {
+          val thisBlock = currentBlock
+          val nextBlock = newBlockBuilder()
+          currentBlock = nextBlock
+
+          builder.addNode(thisBlock)
+          builder.addEdge(SSAAfterYieldEdge(thisBlock.id, nextBlock.id))
+        }
+        is AwaitStmt -> {
+          val thisBlock = currentBlock
+          val nextBlock = newBlockBuilder()
+          currentBlock = nextBlock
+
+          builder.addNode(thisBlock)
+          builder.addEdge(SSAAfterAwaitEdge(thisBlock.id, nextBlock.id))
+        }
         is TryStmt -> TODO()
-        else ->
-          // Branch, BranchByIter, Jump, Phi는 SSATransform에서 생성하지 않기 때문에 처리하지 않아도 됨
-          TODO()
+        // Phi, Branch, BranchByIter, Jump는 SSATransform에서 생성하지 않기 때문에 처리하지 않아도 됨
+        is Phi -> TODO()
+        is Branch -> TODO()
+        is BranchByIter -> TODO()
+        is Jump -> TODO()
+        else -> TODO()
       }
     }
     val exitPoint = currentBlock.id

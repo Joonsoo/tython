@@ -689,6 +689,13 @@ data class Continue(
 
 sealed class AbstractExpr {
   companion object {
+    fun fromProtoNullable(proto: com.giyeok.tython.proto.AbstractExpr): AbstractExpr? =
+      if (proto.abstractExprCase == com.giyeok.tython.proto.AbstractExpr.AbstractExprCase.ABSTRACTEXPR_NOT_SET) {
+        null
+      } else {
+        fromProto(proto)
+      }
+
     fun fromProto(proto: com.giyeok.tython.proto.AbstractExpr): AbstractExpr =
       when (proto.abstractExprCase) {
         com.giyeok.tython.proto.AbstractExpr.AbstractExprCase.BOOL_OP ->
@@ -1626,7 +1633,7 @@ data class Arguments(
   val args: List<Arg>,
   val vararg: Arg?,
   val kwonlyargs: List<Arg>,
-  val kw_defaults: List<AbstractExpr>,
+  val kw_defaults: List<AbstractExpr?>,
   val kwarg: Arg?,
   val defaults: List<AbstractExpr>,
 ) {
@@ -1637,7 +1644,7 @@ data class Arguments(
         proto.argsList.map { Arg.fromProto(it) },
         if (proto.hasVararg()) Arg.fromProto(proto.vararg) else null,
         proto.kwonlyargsList.map { Arg.fromProto(it) },
-        proto.kwDefaultsList.map { AbstractExpr.fromProto(it) },
+        proto.kwDefaultsList.map { AbstractExpr.fromProtoNullable(it) },
         if (proto.hasKwarg()) Arg.fromProto(proto.kwarg) else null,
         proto.defaultsList.map { AbstractExpr.fromProto(it) },
       )

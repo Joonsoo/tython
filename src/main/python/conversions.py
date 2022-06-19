@@ -420,8 +420,7 @@ def apply_import_from(node: ast.ImportFrom, proto: python3_10_pb2.ImportFrom):
 
 def apply_global(node: ast.Global, proto: python3_10_pb2.Global):
   for x in node.names:
-    v = proto.names.add()
-    v.names = x
+    proto.names.append(x)
   proto.lineno = node.lineno
   proto.col_offset = node.col_offset
   if node.end_lineno is not None:
@@ -431,8 +430,7 @@ def apply_global(node: ast.Global, proto: python3_10_pb2.Global):
 
 def apply_nonlocal(node: ast.Nonlocal, proto: python3_10_pb2.Nonlocal):
   for x in node.names:
-    v = proto.names.add()
-    v.names = x
+    proto.names.append(x)
   proto.lineno = node.lineno
   proto.col_offset = node.col_offset
   if node.end_lineno is not None:
@@ -1210,8 +1208,7 @@ def apply_match_class(node: ast.MatchClass, proto: python3_10_pb2.MatchClass):
     v = proto.patterns.add()
     apply_abstract_pattern(x, v)
   for x in node.kwd_attrs:
-    v = proto.kwd_attrs.add()
-    v.kwd_attrs = x
+    proto.kwd_attrs.append(x)
   for x in node.kwd_patterns:
     v = proto.kwd_patterns.add()
     apply_abstract_pattern(x, v)

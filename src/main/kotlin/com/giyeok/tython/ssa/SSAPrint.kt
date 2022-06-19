@@ -30,22 +30,39 @@ fun printSSA(ssa: SSA, indent: String) {
     is LoadAttribute -> {
       println("$indent${ssa.dest} := attr ${ssa.obj}.${ssa.attrName}")
     }
-    is LoadClassDef -> TODO()
+    is CreateClassDef -> {
+      println("$indent${ssa.dest} := class ${ssa.definedName}")
+      // TODO
+    }
     is LoadConst -> {
       val kind = ssa.value.kind?.let { "(kind=$it)" } ?: ""
       println("$indent${ssa.dest} := const ${ssa.value.value}$kind")
     }
     is LoadConstBool ->
       println("$indent${ssa.dest} := const bool ${ssa.value}")
-    is LoadFunctionDef -> TODO()
+    is CreateFunctionDef -> {
+      println("$indent${ssa.dest} := function ${ssa.definedName}")
+      ssa.decorators.forEach { deco ->
+        println("$indent  @$deco")
+      }
+      println("$indent  scope=${ssa.variablesScope}(pureLocals=${ssa.variablesScope.pureLocals()})")
+      printArgs(ssa.args, "$indent  ")
+      if (ssa.returnType != null) {
+        println("$indent  -> ${ssa.returnType}")
+      }
+      println("$indent  ====")
+      printSSA(ssa.body, "$indent  ")
+    }
     is LoadName ->
       println("$indent${ssa.dest} := name ${ssa.source}")
     is LoadSubscript ->
       println("$indent${ssa.dest} := ${ssa.obj}[${ssa.slice}]")
     is Phi ->
       println("$indent${ssa.dest} := phi(${ssa.cands.joinToString()})")
-    is RaiseStmt -> TODO()
-    is ReturnStmt -> TODO()
+    is RaiseStmt ->
+      println("${indent}raise ${ssa.exc} ${ssa.cause}")
+    is ReturnStmt ->
+      println("${indent}return ${ssa.value}")
     is StoreAttribute ->
       println("${indent}attr ${ssa.obj}.${ssa.attrName} := ${ssa.value}")
     is StoreName ->
@@ -111,8 +128,69 @@ fun printSSA(ssa: SSA, indent: String) {
       println("${indent}continue")
     is CreateIter ->
       println("$indent${ssa.dest} = iter(${ssa.value})")
+    is AddToDict ->
+      println("$indent${ssa.dest}.dictAdd(${ssa.key}, ${ssa.value})")
+    is AddToList ->
+      println("$indent${ssa.dest}.listAdd(${ssa.elem})")
+    is AddToSet ->
+      println("$indent${ssa.dest}.setAdd(${ssa.elem})")
+    is CreateGenerator -> {
+      println("$indent${ssa.dest} := generator")
+      printSSA(ssa.body, "$indent  ")
+      println("$indent  scope=${ssa.variablesScope}(pureLocals=${ssa.variablesScope.pureLocals()})")
+    }
+    is CreateLambda -> {
+      println("$indent${ssa.dest} := lambda")
+      printArgs(ssa.args, "$indent  ")
+      println("$indent====")
+      printSSA(ssa.body, "$indent  ")
+    }
+    is LoadLatestException -> TODO()
+    is StoreImport -> TODO()
+    is CompBlock -> {
+      println("${indent}comp block")
+      printSSA(ssa.body, "$indent  ")
+      println("$indent  scope=${ssa.variablesScope}(pureLocals=${ssa.variablesScope.pureLocals()})")
+    }
+    is YieldStmt -> {
+      // python yield는 generator에서 .send라는 메소드를 이용해서 값을 받을 수 있음.. 이상한 기능..
+      // ssa.recv는 .send로 보내진 값을 받는 위치
+      println("${indent}yield ${ssa.emit}${ssa.recv?.let { " (recv $it)" } ?: ""}")
+    }
     else -> TODO()
   }
+}
+
+fun printArgs(args: CallableArgs, indent: String) {
+  if (args.posOnlyArgs.isEmpty() && args.args.isEmpty() && args.vararg == null && args.kwOnlyArgs.isEmpty() && args.kwarg == null) {
+    println("$indent(No args)")
+    return
+  }
+  if (args.posOnlyArgs.isNotEmpty()) {
+    args.posOnlyArgs.forEach { arg ->
+      printArg(arg, indent)
+    }
+    println("$indent/")
+  }
+  args.args.forEach { arg ->
+    printArg(arg, indent)
+  }
+  args.vararg?.let { arg ->
+    printArg(arg, indent, prefix = "*")
+  }
+  if (args.kwOnlyArgs.isNotEmpty()) {
+    println("$indent*")
+    args.kwOnlyArgs.forEach { arg ->
+      printArg(arg, indent)
+    }
+  }
+  args.kwarg?.let { arg ->
+    printArg(arg, indent, prefix = "**")
+  }
+}
+
+fun printArg(arg: CallableArg, indent: String, prefix: String = "") {
+  println("$indent${arg.annotation?.let { "$it " } ?: ""}$prefix${arg.name}${arg.annotation?.let { ": $it" } ?: ""}${arg.default?.let { " = $it" } ?: ""}")
 }
 
 fun printSSA(ssa: SSABlock, indent: String) {

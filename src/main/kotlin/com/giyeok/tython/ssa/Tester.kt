@@ -11,8 +11,7 @@ fun main() {
   )
   val moduleAsts = ParseModules.INSTNACE.load(srcs)
 
-  val ssaTransform = SSATransform()
-  val block = ssaTransform.traverseBlock(moduleAsts.getValue("a").body, true)
+  val block = SSAGen().traverseNewBlock(moduleAsts.getValue("a").body, VariablesScope())
 
   block.stmts.forEach {
     printSSA(it, "")

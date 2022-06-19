@@ -1,8 +1,7 @@
 package com.giyeok.tython.ssa.basicblock
 
 import com.giyeok.tython.parse.ParseModules
-import com.giyeok.tython.ssa.SSATransform
-import com.giyeok.tython.ssa.printSSA
+import com.giyeok.tython.ssa.*
 
 fun main() {
   val srcs = mapOf(
@@ -13,12 +12,25 @@ fun main() {
   )
   val moduleAsts = ParseModules.INSTNACE.load(srcs)
 
-  val ssaTransform = SSATransform()
-  val block = ssaTransform.traverseBlock(moduleAsts.getValue("a").body, true)
+//  val args = (moduleAsts.getValue("a").body[0] as FunctionDef).args
+//  println("posonlyargs: ${args.posonlyargs}")
+//  println("args: ${args.args}")
+//  println("vararg: ${args.vararg}")
+//  println("kwonlyargs: ${args.kwonlyargs}")
+//  println("kw_defaults: ${args.kw_defaults}")
+//  println("kwarg: ${args.kwarg}")
+//  println("defaults: ${args.defaults}")
+
+
+  val globalScope = VariablesScope()
+  val block = SSAGen().traverseNewBlock(moduleAsts.getValue("a").body, globalScope)
+
+  traverseVarRefs(block, globalScope)
 
   printSSA(block, "")
+  println("$globalScope (pureLocals=${globalScope.pureLocals()})")
   println()
-  val cfg = SSAControlFlowGraphTransform().transform(block.stmts, null)
+  val cfg = SSAControlFlowGraphGen().transform(block.stmts, null)
 
   cfg.nodes.entries.sortedBy { it.key }.forEach { (id, basicBlock) ->
     println("BB $id:")
@@ -34,7 +46,6 @@ fun main() {
       is SSANormalFlowEdge -> {
         println("  ${edge.startNode} -> ${edge.endNode};")
       }
-      is SSAExceptionCatchEdge -> TODO()
       is SSAAfterYieldEdge -> TODO()
     }
   }

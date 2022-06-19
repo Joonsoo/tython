@@ -8,18 +8,66 @@ data class SSAVar(val name: String) {
 
 sealed class SSA
 
-// newScope이 true면 여기서 정의되는 name들은 바깥 스콥에서 보이지 않음
-data class SSABlock(val stmts: List<SSA>, val newScope: Boolean)
+data class SSABlock(val stmts: List<SSA>)
 data class SSABlockValue(val block: SSABlock, val value: SSAVar)
 
 data class LoadConst(val dest: SSAVar, val value: Constant) : SSA()
 data class LoadConstBool(val dest: SSAVar, val value: Boolean) : SSA()
 
-// lookup table은 어쩌지? -> SSA가 실행될 때 LoadName의 context만 바꿔주면 됨
-// default value들은? -> 마찬가지로 LoadName의 context만 잘 해주면 됨
-data class LoadFunctionDef(val dest: SSAVar, val functionDef: FunctionDef) : SSA()
-data class LoadClassDef(val dest: SSAVar, val classDef: ClassDef) : SSA()
-data class LoadLambda(val dest: SSAVar, val lambda: Lambda) : SSA()
+// local variable은 nested function에서 nonlocal이나 global로 reference되지 않으면 삭제할 수 있다
+// 하지만 SSA화 하는 중간에는 purely local variable인지 뭔지 알 수 없기 때문에 일단 variables context만 저장해 둔다.
+// 함수 내부에서 eval이 사용되는 경우에도 그 함수의 모든 local variable을 purely local variable이라고 보장할 수 없게 된다.
+data class CreateFunctionDef(
+  val dest: SSAVar,
+  val definedName: String,
+  // decorators는 앞에서부터 순서대로 호출되어야 함. 정의된 것과 반대 순서
+  val decorators: List<SSAVar>,
+  val args: CallableArgs,
+  val returnType: SSAVar?,
+  val body: SSABlock,
+  val variablesScope: VariablesScope,
+) : SSA()
+
+data class CreateClassDef(
+  val dest: SSAVar,
+  val definedName: String,
+  val decorators: List<SSAVar>,
+  val bases: List<SSAVar>,
+  val body: SSABlock,
+  val variablesScope: VariablesScope,
+) : SSA()
+
+data class CreateLambda(
+  val dest: SSAVar,
+  val args: CallableArgs,
+  val body: SSABlockValue,
+  val variablesScope: VariablesScope
+) : SSA()
+
+data class CallableArgs(
+  // argument 리스트에서 '/' 앞에 있는 것들
+  val posOnlyArgs: List<CallableArg>,
+  // argument 리스트에서 '/'와 '*' 사이에 있는 것들
+  val args: List<CallableArg>,
+  val vararg: CallableArg?,
+  val kwOnlyArgs: List<CallableArg>,
+  val kwarg: CallableArg?,
+)
+
+data class CallableArg(
+  val name: String,
+  val annotation: SSAVar?,
+  val typeComment: String?,
+  val default: SSAVar?
+)
+
+// ListComp, SetComp, DictComp는 CreateGenerator의 내용으로 들어갈 것을 그냥 현재 블록에 넣는 정도의 차이
+data class CompBlock(val body: SSABlock, val variablesScope: VariablesScope) : SSA()
+data class CreateGenerator(
+  val dest: SSAVar,
+  val body: SSABlock,
+  val variablesScope: VariablesScope
+) : SSA()
 
 data class LoadName(val dest: SSAVar, val source: String) : SSA()
 data class StoreName(val dest: String, val source: SSAVar) : SSA()
@@ -67,6 +115,10 @@ data class CreateDict(val dest: SSAVar, val elems: List<Pair<SSAVar, SSAVar>>) :
 data class CreateSlice(val dest: SSAVar, val start: SSAVar?, val stop: SSAVar?, val step: SSAVar?) :
   SSA()
 
+data class AddToList(val dest: SSAVar, val elem: SSAVar) : SSA()
+data class AddToSet(val dest: SSAVar, val elem: SSAVar) : SSA()
+data class AddToDict(val dest: SSAVar, val key: SSAVar, val value: SSAVar) : SSA()
+
 data class JoinString(val dest: SSAVar, val values: List<SSAVar>) : SSA()
 data class FormatString(
   val dest: SSAVar,
@@ -74,10 +126,6 @@ data class FormatString(
   val conversion: Int,
   val format: SSAVar?
 ) : SSA()
-
-// generator도 LoadFunctionDef, LoadClassDef, LoadLamba에서와 마찬가지로 실제 실행할 때 LoadName의 context만 잘 바꿔주면 됨
-// ListComp, SetComp, DictComp는 CreateGenerator의 내용으로 들어갈 것을 그냥 현재 블록에 넣는 정도의 차이
-data class CreateGenerator(val dest: SSAVar) : SSA()
 
 data class ForLoop(
   // loop를 돌 대상 iterable
@@ -119,6 +167,8 @@ data class CallFunc(
 data class IfStmt(val test: SSAVar, val then: SSABlock, val orelse: SSABlock?) : SSA()
 data class RaiseStmt(val exc: SSAVar?, val cause: SSAVar?) : SSA()
 data class ReturnStmt(val value: SSAVar?) : SSA()
+data class YieldStmt(val recv: SSAVar?, val emit: SSAVar?) : SSA()
+data class AwaitStmt(val recv: SSAVar, val value: SSAVar) : SSA()
 
 data class TryStmt(
   val body: SSABlock,
@@ -134,6 +184,7 @@ data class AssignVar(val dest: SSAVar, val source: SSAVar) : SSA()
 
 object BreakLoop : SSA()
 object ContinueLoop : SSA()
+
 
 data class Phi(val dest: SSAVar, val cands: List<SSAVar>) : SSA()
 data class Branch(val test: SSAVar, val branchIfTrue: String, val branchIfFalse: String) : SSA()

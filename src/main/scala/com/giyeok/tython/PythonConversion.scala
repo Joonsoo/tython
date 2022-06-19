@@ -51,10 +51,10 @@ class PythonConversion(val names: Map[String, Name]) {
           builder.append(s"    ${setStmt(param, "proto", "node")}\n")
         case com.giyeok.tython.AsdlAst.TypeAttr.REPEATED =>
           builder.append(s"  for x in ${getattr("node", param.name)}:\n")
-          builder.append(s"    v = ${getattr("proto", param.name)}.add()\n")
           if (isPlainType(param.typeName)) {
-            builder.append(s"    ${setattr("v", param.name, "x")}\n")
+            builder.append(s"    ${getattr("proto", param.name)}.append(x)\n")
           } else {
+            builder.append(s"    v = ${getattr("proto", param.name)}.add()\n")
             val typeName = names(param.typeName)
             builder.append(s"    apply_${typeName.snakeCase}(x, v)\n")
           }
