@@ -10,6 +10,7 @@ data class VariablesScope(
   val nonlocalOrGlobalByNested: MutableSet<String>,
   // 이 스콥의 변수 중 nested function/class 등에서 implicit하게 읽어가고 있는 변수
   val readByNested: MutableSet<String>,
+  // TODO scope이 global인 경우 다른 스콥에서 접근하는 경우도 pureLocal에서 제외해야 함
 ) {
   constructor() : this(
     mutableSetOf(),
@@ -55,7 +56,7 @@ fun traverseVarRefs(block: SSABlock, global: VariablesScope, scopes: List<Variab
         addNewScope(stmt.variablesScope)
         traverseVarRefs(stmt.body.block, global, scopes + stmt.variablesScope)
       }
-      is CompBlock -> {
+      is ComprehensionBlock -> {
         addNewScope(stmt.variablesScope)
         traverseVarRefs(stmt.body, global, scopes + stmt.variablesScope)
       }

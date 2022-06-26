@@ -1,4 +1,4 @@
-package com.giyeok.tython.ssa.basicblock
+package com.giyeok.tython.basicblock
 
 import com.giyeok.tython.ssa.*
 
@@ -9,15 +9,15 @@ class SSAControlFlowGraphGen {
     return "$idCounter"
   }
 
-  class BasicBlockBuilder(val id: String, val ssas: MutableList<SSA>) {
-    fun append(ssa: SSA) {
+  class BasicBlockBuilder(val id: String, val ssas: MutableList<SSABasic>) {
+    fun append(ssa: SSABasic) {
       ssas.add(ssa)
     }
   }
 
   fun newBlockBuilder() = BasicBlockBuilder(newId(), mutableListOf())
 
-  fun SSAControlFlowGraph.append(vararg ssas: SSA): SSAControlFlowGraph {
+  fun SSAControlFlowGraph.append(vararg ssas: SSABasic): SSAControlFlowGraph {
     // this.exitPoint 끝에 ssa를 추가
     if (this.exitPoint == null) {
       return this
@@ -49,7 +49,7 @@ class SSAControlFlowGraphGen {
     fun build(entryPoint: String, exitPoint: String?): SSAControlFlowGraph =
       SSAControlFlowGraph(
         nodes.toMap(),
-        edges.toList(),
+        edges.toSet(),
         entryPoint,
         exitPoint,
         exceptionHandlers.toMap()
@@ -99,10 +99,10 @@ class SSAControlFlowGraphGen {
         is CreateLambda,
         is LoadLatestException,
         is StoreImport -> {
-          currentBlock.append(ssa)
+          currentBlock.append(ssa as SSABasic)
         }
         is RaiseStmt, is ReturnStmt -> {
-          currentBlock.append(ssa)
+          currentBlock.append(ssa as SSABasic)
           builder.addNode(currentBlock)
           check(index + 1 == ssas.size) { "statement after break" }
           return builder.build(entryPoint, null)
@@ -237,7 +237,7 @@ class SSAControlFlowGraphGen {
           val thenGraph = transform(ssa.then.block.stmts, loopCtx).append(Jump(nextBlock.id))
           val elseGraph = transform(ssa.orelse.block.stmts, loopCtx).append(Jump(nextBlock.id))
           thisBlock.append(Branch(ssa.test, thenGraph.entryPoint, elseGraph.entryPoint))
-          nextBlock.append(Phi(ssa.dest, listOf(ssa.then.value, ssa.orelse.value)))
+          nextBlock.append(Phi(ssa.dest, listOf(ssa.then.value, ssa.orelse.value), null))
 
           builder.addNode(thisBlock)
           builder.addEdge(SSANormalFlowEdge(thisBlock.id, thenGraph.entryPoint))
@@ -251,7 +251,7 @@ class SSAControlFlowGraphGen {
             builder.addEdge(SSANormalFlowEdge(elseGraph.exitPoint, nextBlock.id))
           }
         }
-        is CompBlock -> {
+        is ComprehensionBlock -> {
           val thisBlock = currentBlock
           val nextBlock = newBlockBuilder()
           currentBlock = nextBlock
@@ -267,6 +267,7 @@ class SSAControlFlowGraphGen {
           // TODO 뭐 더 할게 있나?
         }
         is YieldStmt -> {
+          currentBlock.append(ssa)
           val thisBlock = currentBlock
           val nextBlock = newBlockBuilder()
           currentBlock = nextBlock
@@ -275,6 +276,7 @@ class SSAControlFlowGraphGen {
           builder.addEdge(SSAAfterYieldEdge(thisBlock.id, nextBlock.id))
         }
         is AwaitStmt -> {
+          currentBlock.append(ssa)
           val thisBlock = currentBlock
           val nextBlock = newBlockBuilder()
           currentBlock = nextBlock
@@ -283,8 +285,7 @@ class SSAControlFlowGraphGen {
           builder.addEdge(SSAAfterAwaitEdge(thisBlock.id, nextBlock.id))
         }
         is TryStmt -> TODO()
-        // Phi, Branch, BranchByIter, Jump는 SSATransform에서 생성하지 않기 때문에 처리하지 않아도 됨
-        is Phi -> TODO()
+        // Branch, BranchByIter, Jump는 SSATransform에서 생성하지 않기 때문에 처리하지 않아도 됨
         is Branch -> TODO()
         is BranchByIter -> TODO()
         is Jump -> TODO()

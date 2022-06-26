@@ -12,16 +12,26 @@
 # g = (x + y + q for x in [1, 2, 3] if func1(x) if func2(x) for y in [4, 5, 6])
 # print(g)
 
+def somefunc():
+    return True
+
+
+q = 0
+
+if somefunc():
+    q = 5
+else:
+    q = 4
+print(q)
+
+if somefunc():
+    q = 7
+print(q)
+
 x = 0
 
-
-def f1(x):
-    print(x)
-    global f1
-    f1 = 2
-
-
-print(x)
-f1(10)
-print(f"f1={f1}")
-print(x)
+while x < 5:
+    if x % 2 == 0:
+        print(x)
+        x *= 2
+    x += 1

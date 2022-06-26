@@ -1,4 +1,4 @@
-package com.giyeok.tython.ssa.basicblock.analysis
+package com.giyeok.tython.analysis
 
 // 함수나 클래스는 CreateFunctionDef, CreateClassDef의 dest를 identifier로 한다
 // 함수나 클래스 내부에서

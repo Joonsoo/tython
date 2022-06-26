@@ -2,12 +2,8 @@ package com.giyeok.tython.ssa
 
 import com.giyeok.tython.parse.*
 
-class SSAGen {
-  private var idCounter = 0
-  fun newVar(): SSAVar {
-    idCounter += 1
-    return SSAVar("$idCounter")
-  }
+class SSAGen(val vars: SSAVarIssuer) {
+  fun newVar(): SSAVar = vars.newVar()
 
   fun traverseBlock(block: List<AbstractStmt>, scope: VariablesScope, emitter: SSAEmitter) {
     block.forEach { stmt ->
@@ -169,10 +165,10 @@ class SSAGen {
       is AsyncWith -> TODO()
       is AugAssign -> {
         val target = traverseExpr(stmt.target, scope, emitter)
-        val value = traverseExpr(stmt.value, scope, emitter)
+        val operand = traverseExpr(stmt.value, scope, emitter)
         val result = newVar()
-        emitter.emit(BinaryOp(result, stmt.op, target, value))
-        unpackAssign(stmt.target, value, scope, emitter)
+        emitter.emit(BinaryOp(result, stmt.op, target, operand))
+        unpackAssign(stmt.target, result, scope, emitter)
       }
       is Break -> {
         emitter.emit(BreakLoop)
@@ -453,7 +449,7 @@ class SSAGen {
         eltEmitter.emit(AddToDict(result, keyVar, valueVar))
 
         val generatorBlock = createGenerator(expr.generators, newScope, eltEmitter.getBlock())
-        emitter.emit(CompBlock(generatorBlock, newScope))
+        emitter.emit(ComprehensionBlock(generatorBlock, newScope))
         result
       }
       is FormattedValue -> {
@@ -513,7 +509,7 @@ class SSAGen {
         eltEmitter.emit(AddToList(result, eltBlock))
 
         val generatorBlock = createGenerator(expr.generators, newScope, eltEmitter.getBlock())
-        emitter.emit(CompBlock(generatorBlock, newScope))
+        emitter.emit(ComprehensionBlock(generatorBlock, newScope))
         result
       }
       is Name -> {
@@ -541,7 +537,7 @@ class SSAGen {
         eltEmitter.emit(AddToSet(result, eltBlock))
 
         val generatorBlock = createGenerator(expr.generators, newScope, eltEmitter.getBlock())
-        emitter.emit(CompBlock(generatorBlock, newScope))
+        emitter.emit(ComprehensionBlock(generatorBlock, newScope))
         result
       }
       is Slice -> {

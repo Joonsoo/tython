@@ -11,9 +11,10 @@ fun main() {
   )
   val moduleAsts = ParseModules.INSTNACE.load(srcs)
 
-  val block = SSAGen().traverseNewBlock(moduleAsts.getValue("a").body, VariablesScope())
+  val block = SSAGen(SSAVarIssuer("%"))
+    .traverseNewBlock(moduleAsts.getValue("a").body, VariablesScope())
 
   block.stmts.forEach {
-    printSSA(it, "")
+    System.console().writer().printSSA(it, "")
   }
 }

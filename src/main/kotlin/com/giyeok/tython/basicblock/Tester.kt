@@ -1,7 +1,9 @@
-package com.giyeok.tython.ssa.basicblock
+package com.giyeok.tython.basicblock
 
 import com.giyeok.tython.parse.ParseModules
+import com.giyeok.tython.rewrite.PhizeLocals
 import com.giyeok.tython.ssa.*
+import java.io.PrintWriter
 
 fun main() {
   val srcs = mapOf(
@@ -23,31 +25,21 @@ fun main() {
 
 
   val globalScope = VariablesScope()
-  val block = SSAGen().traverseNewBlock(moduleAsts.getValue("a").body, globalScope)
+  val block = SSAGen(SSAVarIssuer("%")).traverseNewBlock(moduleAsts.getValue("a").body, globalScope)
 
   traverseVarRefs(block, globalScope)
 
-  printSSA(block, "")
+  val p = PrintWriter(System.out)
+  p.printSSA(block, "")
   println("$globalScope (pureLocals=${globalScope.pureLocals()})")
   println()
   val cfg = SSAControlFlowGraphGen().transform(block.stmts, null)
 
-  cfg.nodes.entries.sortedBy { it.key }.forEach { (id, basicBlock) ->
-    println("BB $id:")
-    basicBlock.ssas.forEach { ssa ->
-      printSSA(ssa, "  ")
-    }
-  }
-  println("digraph G {")
-  println("  ${cfg.entryPoint} [rank=min];")
-  println("  ${cfg.exitPoint} [rank=max];")
-  cfg.edges.forEach { edge ->
-    when (edge) {
-      is SSANormalFlowEdge -> {
-        println("  ${edge.startNode} -> ${edge.endNode};")
-      }
-      is SSAAfterYieldEdge -> TODO()
-    }
-  }
-  println("}")
+  p.printCfg(cfg)
+
+  val f = PhizeLocals(cfg, globalScope.pureLocals(), setOf())
+  val newCfg = f.run()
+  p.printCfgDotGraphWithCode(newCfg)
+
+  p.flush()
 }

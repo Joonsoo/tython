@@ -1,8 +1,10 @@
 package com.giyeok.tython.ssa
 
 import com.giyeok.tython.parse.*
+import java.io.Console
+import java.io.PrintWriter
 
-fun printSSA(ssa: SSA, indent: String) {
+fun PrintWriter.printSSA(ssa: SSA, indent: String) {
   when (ssa) {
     is BinaryOp ->
       println("$indent${ssa.dest} := ${ssa.lhs} ${ssa.op.str()} ${ssa.rhs}")
@@ -58,7 +60,7 @@ fun printSSA(ssa: SSA, indent: String) {
     is LoadSubscript ->
       println("$indent${ssa.dest} := ${ssa.obj}[${ssa.slice}]")
     is Phi ->
-      println("$indent${ssa.dest} := phi(${ssa.cands.joinToString()})")
+      println("$indent${ssa.dest} := phi(${ssa.sources.joinToString()})${ssa.varName?.let { " for $it" } ?: ""}")
     is RaiseStmt ->
       println("${indent}raise ${ssa.exc} ${ssa.cause}")
     is ReturnStmt ->
@@ -67,6 +69,8 @@ fun printSSA(ssa: SSA, indent: String) {
       println("${indent}attr ${ssa.obj}.${ssa.attrName} := ${ssa.value}")
     is StoreName ->
       println("${indent}name ${ssa.dest} := ${ssa.source}")
+    is StoreLocalName ->
+      println("${indent}(local) name ${ssa.dest} := ${ssa.source}")
     is StoreSubscript ->
       println("$indent${ssa.obj}[${ssa.slice}] := ${ssa.value}")
     is TryStmt -> TODO()
@@ -147,7 +151,7 @@ fun printSSA(ssa: SSA, indent: String) {
     }
     is LoadLatestException -> TODO()
     is StoreImport -> TODO()
-    is CompBlock -> {
+    is ComprehensionBlock -> {
       println("${indent}comp block")
       printSSA(ssa.body, "$indent  ")
       println("$indent  scope=${ssa.variablesScope}(pureLocals=${ssa.variablesScope.pureLocals()})")
@@ -155,13 +159,13 @@ fun printSSA(ssa: SSA, indent: String) {
     is YieldStmt -> {
       // python yield는 generator에서 .send라는 메소드를 이용해서 값을 받을 수 있음.. 이상한 기능..
       // ssa.recv는 .send로 보내진 값을 받는 위치
-      println("${indent}yield ${ssa.emit}${ssa.recv?.let { " (recv $it)" } ?: ""}")
+      println("${indent}yield ${ssa.emit}${ssa.dest?.let { " (recv $it)" } ?: ""}")
     }
     else -> TODO()
   }
 }
 
-fun printArgs(args: CallableArgs, indent: String) {
+fun PrintWriter.printArgs(args: CallableArgs, indent: String) {
   if (args.posOnlyArgs.isEmpty() && args.args.isEmpty() && args.vararg == null && args.kwOnlyArgs.isEmpty() && args.kwarg == null) {
     println("$indent(No args)")
     return
@@ -189,17 +193,19 @@ fun printArgs(args: CallableArgs, indent: String) {
   }
 }
 
-fun printArg(arg: CallableArg, indent: String, prefix: String = "") {
+fun PrintWriter.printArg(arg: CallableArg, indent: String, prefix: String = "") {
   println("$indent${arg.annotation?.let { "$it " } ?: ""}$prefix${arg.name}${arg.annotation?.let { ": $it" } ?: ""}${arg.default?.let { " = $it" } ?: ""}")
 }
 
-fun printSSA(ssa: SSABlock, indent: String) {
-  ssa.stmts.forEach {
-    printSSA(it, indent)
-  }
+fun PrintWriter.printSSA(ssas: List<SSA>, indent: String) {
+  ssas.forEach { printSSA(it, indent) }
 }
 
-fun printSSA(ssa: SSABlockValue, indent: String) {
+fun PrintWriter.printSSA(ssa: SSABlock, indent: String) {
+  printSSA(ssa.stmts, indent)
+}
+
+fun PrintWriter.printSSA(ssa: SSABlockValue, indent: String) {
   printSSA(ssa.block, indent)
   println("$indent${ssa.value}")
 }
